@@ -1,9 +1,12 @@
 import React, { useState, useContext } from 'react'
 import {
     CREATE_EVENT,
-    DELETE_ALL_EVENTS
+    DELETE_ALL_EVENTS,
+    ADD_OPERATION_LOG,
+    DELETE_ALL_OPERATION_LOGS
 } from '../actions'
 import AppContext from '../contexts/AppContext'
+import { timeCurrentIso8601 } from '../utils'
 
 const EventForm = () => {
     const { state, dispatch } = useContext(AppContext)
@@ -17,6 +20,13 @@ const EventForm = () => {
             title,
             body
         })
+
+        dispatch({
+            type: ADD_OPERATION_LOG,
+            description: 'イベントを作成しました。',
+            operatedAt: timeCurrentIso8601()
+        })
+
         setTitle('')
         setBody('')
     }
@@ -28,12 +38,29 @@ const EventForm = () => {
             dispatch({
                 type: DELETE_ALL_EVENTS
             })
+            dispatch({
+                type: ADD_OPERATION_LOG,
+                description: '全てのログを削除しました。',
+                operatedAt: timeCurrentIso8601()
+            })
+        }
+    }
+
+    const deleteAllLogs = e => {
+        e.preventDefault()
+        const result = window.confirm("全ての操作ログを本当に削除してもよろしいでしょうか？")
+        if (result) {
+            dispatch({
+                type: DELETE_ALL_OPERATION_LOGS
+            })
         }
     }
 
     const unCreatable = title === '' || body === ''
 
-    const unDeletable = state.length === 0
+    const unDeletable = state.events.length === 0
+
+    const unDeletableLogs = state.operationLogs.length === 0
 
     return (
         <>
@@ -51,6 +78,7 @@ const EventForm = () => {
 
                 <button className="btn btn-primary" onClick={addEvent} disabled={unCreatable}>イベントを作成する</button>
                 <button className="btn btn-danger" onClick={deleteAllEvents} disabled={unDeletable}>全てのイベントを削除する</button>
+                <button className="btn btn-danger" onClick={deleteAllLogs} disabled={unDeletableLogs}>全ての操作ログを削除する</button>
             </form>
         </>
     )
